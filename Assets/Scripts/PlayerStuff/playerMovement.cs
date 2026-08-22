@@ -24,6 +24,7 @@ public class playerMovement : MonoBehaviour
     [SerializeField] private float contJumpDuration;
     [SerializeField] private float jumpDelay;
     [SerializeField] private PhysicsMaterial2D PhysicsMaterial2D;
+    [SerializeField, Range(0f, 0.3f)] private float coyoteTime;
     private Coroutine JumpCoroutine;
     private InputAction jumpAction;
     private bool hasJumped;
@@ -50,11 +51,14 @@ public class playerMovement : MonoBehaviour
             }
         }
     }
+    private float eltime = 0f;
     public bool IsGrounded
     {
         get => isGrounded;
         set
         {
+            eltime += Time.fixedDeltaTime;
+            if (value) eltime = 0f;
             if (value != isGrounded)
             {
                 if (value)
@@ -64,8 +68,12 @@ public class playerMovement : MonoBehaviour
                 }
                 else
                 {
+                    if (eltime > coyoteTime)
+                    {
+                        isGrounded = value;
+                    }
                     rb.sharedMaterial = PhysicsMaterial2D;
-                    isGrounded = value;
+
                 }
             }
         }
