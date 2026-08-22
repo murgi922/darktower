@@ -7,10 +7,4 @@ public class universalScript : MonoBehaviour
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 }
