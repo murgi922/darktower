@@ -23,6 +23,7 @@ public class playerMovement : MonoBehaviour
     [SerializeField] private float contJumpForce;
     [SerializeField] private float contJumpDuration;
     [SerializeField] private float jumpDelay;
+    [SerializeField] private PhysicsMaterial2D PhysicsMaterial2D;
     private Coroutine JumpCoroutine;
     private InputAction jumpAction;
     private bool hasJumped;
@@ -49,6 +50,26 @@ public class playerMovement : MonoBehaviour
             }
         }
     }
+    public bool IsGrounded
+    {
+        get => isGrounded;
+        set
+        {
+            if (value != isGrounded)
+            {
+                if (value)
+                {
+                    rb.sharedMaterial = null;
+                    isGrounded = value;
+                }
+                else
+                {
+                    rb.sharedMaterial = PhysicsMaterial2D;
+                    isGrounded = value;
+                }
+            }
+        }
+    }
     private void Awake()
     {
         moveAction = InputSystem.actions.FindAction("Move");
@@ -70,6 +91,8 @@ public class playerMovement : MonoBehaviour
     {
         Move();
         GroundCheck();
+        if (IsGrounded && (jumpAction.WasPressedThisFrame() || jumpAction.IsInProgress())) HasJumped = true;
+        else HasJumped = false;
     }
     private void Move()
     {
@@ -77,10 +100,12 @@ public class playerMovement : MonoBehaviour
         moveValue.x = moveAction.ReadValue<Vector2>().x;
         moveValue.y = 0f;
         moveValue = (new Vector2(hit2D.normal.y, - hit2D.normal.x)) * moveValue.x;
-        debugDir = hit2D.normal;
         rb.AddForce(moveValue * moveForce, ForceMode2D.Force);
+        if (moveValue.magnitude <= 0.01f)
+        {
+            rb.AddForce(new Vector2(moveAction.ReadValue<Vector2>().x, 0f) * moveForce, ForceMode2D.Force);
+        }
         LimitSpeed(maxSpeed);
-        Debug.Log(hit2D.normal.y);
     }
     private void GroundCheck()
     {
@@ -88,11 +113,13 @@ public class playerMovement : MonoBehaviour
         hit2D = Physics2D.CircleCast(transform.position, castRadius, Vector2.down, castLength, whatIsGround);
         if (hit2D && hit2D.normal.y > 0.5f)
         {
-            isGrounded = true;
-            rb.AddForce(Vector2.up * rb.mass * rb.gravityScale, ForceMode2D.Force);
+            IsGrounded = true;
+
         }
-        else isGrounded = false;
-        Debug.Log(isGrounded);
+        else
+        {
+            IsGrounded = false;
+        }
     }
     private void LimitSpeed(float speed)
     {
@@ -111,20 +138,26 @@ public class playerMovement : MonoBehaviour
     IEnumerator Jump()
     {
         yield return new WaitForSeconds(jumpDelay);
+        float temp = contJumpForce;
+        float jumpForceTemp = temp;
+        rb.linearVelocityY = 0f;
         rb.AddForceY(initialJumpForce, ForceMode2D.Impulse);
         float elapsedTime = 0f;
         while (elapsedTime < contJumpDuration)
         {
             elapsedTime += Time.fixedDeltaTime;
-            rb.AddForceY(contJumpForce, ForceMode2D.Force);
+            if (jumpAction.IsInProgress())
+            {
+                rb.AddForceY(jumpForceTemp, ForceMode2D.Force);
+                jumpForceTemp = Mathf.Lerp(temp, 0f, elapsedTime / contJumpDuration);
+            }
             yield return new WaitForFixedUpdate();
         }
     }
-    private Vector2 debugDir;
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position + (Vector3.down * castLength), castRadius);
-        Gizmos.DrawLine(transform.position, transform.position + new Vector3(debugDir.x, debugDir.y, 0f));
+        Gizmos.DrawLine(transform.position, transform.position + new Vector3(rb.totalForce.x, rb.totalForce.y, 0f));
     }
 }
