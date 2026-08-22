@@ -8,11 +8,13 @@ using UnityEngine.UIElements;
 
 public class playerMovement : MonoBehaviour
 {
-
+    #region Variables
     [Header("Basic Movement")]
     [SerializeField] private float moveForce;
     [SerializeField] private Rigidbody2D rb;
     [SerializeField] private float maxSpeed;
+    private Vector2 moveValue;
+    private float moveValueAbs;
     private InputAction moveAction;
 
     [Header("Jump")]
@@ -25,6 +27,13 @@ public class playerMovement : MonoBehaviour
     [SerializeField] private float jumpDelay;
     [SerializeField] private PhysicsMaterial2D PhysicsMaterial2D;
     [SerializeField, Range(0f, 0.3f)] private float coyoteTime;
+    [SerializeField, Range(0f, 1f)] private float airSpeedMultiplier;
+    [SerializeField] private AnimationCurve jumpCurve;
+    [SerializeField] private float jumpCooldown;
+    private float jumpCoolTime = 0f;
+    private float tempAirSpeedMultiplier = 0f;
+    private float airSpeedMultiplierTimeSpan = 0.3f;
+    private Coroutine IncreaserCoroutine;
     private Coroutine JumpCoroutine;
     private InputAction jumpAction;
     private bool hasJumped;
@@ -41,6 +50,7 @@ public class playerMovement : MonoBehaviour
             {
                 if (value == true)
                 {
+                    jumpCoolTime = 0f;
                     JumpDelegate?.Invoke();
                     hasJumped = value;
                 }
@@ -78,6 +88,8 @@ public class playerMovement : MonoBehaviour
             }
         }
     }
+    #endregion
+    #region Built In Functions
     private void Awake()
     {
         moveAction = InputSystem.actions.FindAction("Move");
@@ -88,6 +100,7 @@ public class playerMovement : MonoBehaviour
     private void OnEnable()
     {
         JumpDelegate += HandleJump;
+        jumpCoolTime = jumpCooldown;
     }
     private void OnDisable()
     {
@@ -98,35 +111,58 @@ public class playerMovement : MonoBehaviour
     private void FixedUpdate()
     {
         Move();
-        GroundCheck();
-        if (IsGrounded && (jumpAction.WasPressedThisFrame() || jumpAction.IsInProgress())) HasJumped = true;
+        bool shouldJump = JumpCooledDown();
+        if (IsGrounded && (jumpAction.WasPressedThisFrame() || jumpAction.IsInProgress()) && shouldJump) HasJumped = true;
         else HasJumped = false;
     }
+    #endregion
+    #region Movement Functions
     private void Move()
     {
-        Vector2 moveValue;
         moveValue.x = moveAction.ReadValue<Vector2>().x;
+        moveValueAbs = Mathf.Abs(moveValue.x);
         moveValue.y = 0f;
         moveValue = (new Vector2(hit2D.normal.y, - hit2D.normal.x)) * moveValue.x;
-        rb.AddForce(moveValue * moveForce, ForceMode2D.Force);
+        float tempAirSpeed = GroundCheck();
+        rb.AddForce(moveValue * moveForce * tempAirSpeed, ForceMode2D.Force);
         if (moveValue.magnitude <= 0.01f)
         {
-            rb.AddForce(new Vector2(moveAction.ReadValue<Vector2>().x, 0f) * moveForce, ForceMode2D.Force);
+            rb.AddForce(new Vector2(moveAction.ReadValue<Vector2>().x * tempAirSpeed, 0f) * moveForce, ForceMode2D.Force);
         }
         LimitSpeed(maxSpeed);
     }
-    private void GroundCheck()
+    private float GroundCheck()
     {
-        
         hit2D = Physics2D.CircleCast(transform.position, castRadius, Vector2.down, castLength, whatIsGround);
         if (hit2D && hit2D.normal.y > 0.5f)
         {
             IsGrounded = true;
-
+            if (tempAirSpeedMultiplier != 0f)
+            {
+                airSpeedMultiplier = tempAirSpeedMultiplier;
+            }
+            if (IncreaserCoroutine != null)
+            {
+                StopCoroutine(IncreaserCoroutine);
+                IncreaserCoroutine = null; 
+            }
+            //Normal Force
+            //rb.AddForce(-(rb.gravityScale * rb.mass * Physics2D.gravity), ForceMode2D.Force);
+            return 1f;
         }
         else
         {
             IsGrounded = false;
+            if (IncreaserCoroutine == null)
+            {
+                tempAirSpeedMultiplier = airSpeedMultiplier;
+                if (moveValueAbs > 0.9f)
+                {
+                    return 1f;
+                }
+                IncreaserCoroutine = StartCoroutine(JumpMultiplierIncreaser(airSpeedMultiplier, airSpeedMultiplierTimeSpan));
+            }
+            return airSpeedMultiplier;
         }
     }
     private void LimitSpeed(float speed)
@@ -134,6 +170,8 @@ public class playerMovement : MonoBehaviour
         float flatVel = rb.linearVelocity.x;
         if (Mathf.Abs(flatVel) > speed) rb.linearVelocity = new Vector2(Mathf.Clamp(flatVel, -speed, speed), rb.linearVelocity.y);
     }
+    #endregion
+    #region Jump Mechanics
     private void HandleJump()
     {
         if (JumpCoroutine != null)
@@ -142,6 +180,16 @@ public class playerMovement : MonoBehaviour
             StartCoroutine(Jump());
         }
         else JumpCoroutine = StartCoroutine(Jump());
+    }
+    private bool JumpCooledDown()
+    {
+        jumpCoolTime += Time.fixedDeltaTime;
+        Mathf.Clamp(jumpCoolTime, 0f, jumpCooldown);
+        if (jumpCoolTime >= jumpCooldown)
+        {
+            return true;
+        }
+        return false;
     }
     IEnumerator Jump()
     {
@@ -157,11 +205,24 @@ public class playerMovement : MonoBehaviour
             if (jumpAction.IsInProgress())
             {
                 rb.AddForceY(jumpForceTemp, ForceMode2D.Force);
-                jumpForceTemp = Mathf.Lerp(temp, 0f, elapsedTime / contJumpDuration);
+                jumpForceTemp = Mathf.Lerp(temp, 0f, jumpCurve.Evaluate(elapsedTime / contJumpDuration));
             }
             yield return new WaitForFixedUpdate();
         }
     }
+    IEnumerator JumpMultiplierIncreaser(float multiplier, float timeSpan)
+    {
+        float elapsedTime = 0f;
+        while (elapsedTime < timeSpan)
+        {
+            yield return new WaitUntil(() => moveValueAbs > 0.1f);
+            elapsedTime += Time.fixedDeltaTime;
+            airSpeedMultiplier = Mathf.Lerp(multiplier, 1f, elapsedTime / timeSpan);
+            yield return new WaitForFixedUpdate();
+        }
+        
+    }
+    #endregion
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.yellow;
