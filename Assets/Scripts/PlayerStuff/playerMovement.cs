@@ -13,6 +13,8 @@ public class playerMovement : MonoBehaviour
     [SerializeField] private float moveForce;
     [SerializeField] private Rigidbody2D rb;
     [SerializeField] private float maxSpeed;
+    [SerializeField] private Transform orientation;
+    [SerializeField] private Transform root;
     private Vector2 moveValue;
     private float moveValueAbs;
     private InputAction moveAction;
@@ -120,7 +122,17 @@ public class playerMovement : MonoBehaviour
     private void Move()
     {
         moveValue.x = moveAction.ReadValue<Vector2>().x;
-        moveValueAbs = Mathf.Abs(moveValue.x);
+        if (moveValue.x < 0f)
+        {
+            orientation.eulerAngles = new Vector3(0f, 180f, 0f);
+            root.eulerAngles = new Vector3(0f, 0f, root.eulerAngles.z);
+        }
+        else if (moveValue.x > 0f)
+        {
+            orientation.eulerAngles = new Vector3(0f, 0f, 0f);
+            root.eulerAngles = new Vector3(0f, 180f, root.eulerAngles.z);
+        }
+            moveValueAbs = Mathf.Abs(moveValue.x);
         moveValue.y = 0f;
         moveValue = (new Vector2(hit2D.normal.y, - hit2D.normal.x)) * moveValue.x;
         float tempAirSpeed = GroundCheck();
