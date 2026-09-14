@@ -28,6 +28,7 @@ public class playerMovement : MonoBehaviour
     [SerializeField] private float contJumpDuration;
     [SerializeField] private float jumpDelay;
     [SerializeField] private PhysicsMaterial2D PhysicsMaterial2D;
+    [SerializeField] private PhysicsMaterial2D tinyFriction;
     [SerializeField, Range(0f, 0.3f)] private float coyoteTime;
     [SerializeField, Range(0f, 1f)] private float airSpeedMultiplier;
     [SerializeField] private AnimationCurve jumpCurve;
@@ -75,7 +76,7 @@ public class playerMovement : MonoBehaviour
             {
                 if (value)
                 {
-                    rb.sharedMaterial = null;
+                    rb.sharedMaterial = tinyFriction;
                     isGrounded = value;
                 }
                 else

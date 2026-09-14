@@ -25,6 +25,7 @@ public class proceduralMovement : MonoBehaviour
     [SerializeField] private Transform orientation;
     [SerializeField] private float rayCastOffset;
     [SerializeField] private AnimationCurve footCurve;
+    [SerializeField, Range(0f, 1f)] private float legProgress;
     public class LegInfo
     {
         public Transform ik;
@@ -63,9 +64,9 @@ public class proceduralMovement : MonoBehaviour
         {
             if (hit)
             {
-                if (Vector2.Distance(hit.point, legInfo.ik.position) > legMoveThreshold)
+                if (Vector2.Distance(hit.point, legInfo.ik.position) > legMoveThreshold )
                 {
-                    if (legInfo.lerpCoroutine == null && (otherLeg.stepProgress > 0.9f) || otherLeg.lerpCoroutine == null)
+                    if (legInfo.lerpCoroutine == null && ((otherLeg.stepProgress > legProgress) || otherLeg.lerpCoroutine == null))
                     {
                         legInfo.lerpCoroutine = StartCoroutine(Lerp(legInfo));
                     }
