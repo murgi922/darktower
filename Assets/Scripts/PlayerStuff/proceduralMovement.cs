@@ -118,7 +118,7 @@ public class proceduralMovement : MonoBehaviour
     {
         Gizmos.color = Color.red;
         Gizmos.color = Color.yellow;
-        //Gizmos.DrawLine(orientation.position + (orientation.right * 0.5f), (-orientation.up * 0.8f) + (orientation.position + (orientation.right * 0.5f)));
+        Gizmos.DrawLine(orientation.position + (orientation.right * 0.5f), (-orientation.up * 0.8f) + (orientation.position + (orientation.right * 0.5f)));
         Gizmos.DrawSphere(hit.point, 0.1f);
 
     }

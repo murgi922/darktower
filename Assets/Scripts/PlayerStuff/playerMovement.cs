@@ -13,8 +13,6 @@ public class playerMovement : MonoBehaviour
     [SerializeField] private float moveForce;
     [SerializeField] private Rigidbody2D rb;
     [SerializeField] private float maxSpeed;
-    [SerializeField] private Transform orientation;
-    [SerializeField] private Transform root;
     private Vector2 moveValue;
     private float moveValueAbs;
     private InputAction moveAction;
@@ -91,8 +89,16 @@ public class playerMovement : MonoBehaviour
             }
         }
     }
+
+    [Header("Animation")]
+    private Animator animator;
+    private string currentAnimation = "";
     #endregion
     #region Built In Functions
+    private void Start()
+    {
+        animator = GetComponent<Animator>();
+    }
     private void Awake()
     {
         moveAction = InputSystem.actions.FindAction("Move");
@@ -111,6 +117,10 @@ public class playerMovement : MonoBehaviour
         jumpAction?.Disable();
         JumpDelegate -= HandleJump; 
     }
+    private void Update()
+    {
+        CheckAnimation();
+    }
     private void FixedUpdate()
     {
         Move();
@@ -125,13 +135,11 @@ public class playerMovement : MonoBehaviour
         moveValue.x = moveAction.ReadValue<Vector2>().x;
         if (moveValue.x < 0f)
         {
-            orientation.eulerAngles = new Vector3(0f, 180f, 0f);
-            root.eulerAngles = new Vector3(0f, 0f, root.eulerAngles.z);
+            transform.eulerAngles = new Vector3(0f, 0f, 0f);
         }
         else if (moveValue.x > 0f)
         {
-            orientation.eulerAngles = new Vector3(0f, 0f, 0f);
-            root.eulerAngles = new Vector3(0f, 180f, root.eulerAngles.z);
+            transform.eulerAngles = new Vector3(0f, 180f, 0f);
         }
             moveValueAbs = Mathf.Abs(moveValue.x);
         moveValue.y = 0f;
@@ -236,10 +244,31 @@ public class playerMovement : MonoBehaviour
         
     }
     #endregion
-    private void OnDrawGizmos()
+    #region Animation
+    private void CheckAnimation()
+    {
+        if (moveValueAbs != 0f && IsGrounded)
+        {
+            ChangeAnimation("Run", 0f);
+        }
+        else
+        {
+            ChangeAnimation("Idle", 0.1f);
+        }
+    }
+    private void ChangeAnimation(string animation, float crossFade = 0.2f)
+    {
+        if (currentAnimation != animation)
+        {
+            currentAnimation = animation;
+            animator.CrossFade(animation, crossFade);
+        }
+    }
+    #endregion
+    /*private void OnDrawGizmos()
     {
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position + (Vector3.down * castLength), castRadius);
         Gizmos.DrawLine(transform.position, transform.position + new Vector3(rb.totalForce.x, rb.totalForce.y, 0f));
-    }
+    }*/
 }
