@@ -92,7 +92,6 @@ public class playerMovement : MonoBehaviour
 
     [Header("Animation")]
     private Animator animator;
-    private string currentAnimation = "";
     #endregion
     #region Built In Functions
     private void Start()
@@ -247,28 +246,17 @@ public class playerMovement : MonoBehaviour
     #region Animation
     private void CheckAnimation()
     {
-        if (moveValueAbs != 0f && IsGrounded)
-        {
-            ChangeAnimation("Run", 0f);
-        }
-        else
-        {
-            ChangeAnimation("Idle", 0.1f);
-        }
+
     }
     private void ChangeAnimation(string animation, float crossFade = 0.2f)
     {
-        if (currentAnimation != animation)
-        {
-            currentAnimation = animation;
-            animator.CrossFade(animation, crossFade);
-        }
+        
     }
     #endregion
-    /*private void OnDrawGizmos()
+    private void OnDrawGizmos()
     {
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position + (Vector3.down * castLength), castRadius);
         Gizmos.DrawLine(transform.position, transform.position + new Vector3(rb.totalForce.x, rb.totalForce.y, 0f));
-    }*/
+    }
 }
