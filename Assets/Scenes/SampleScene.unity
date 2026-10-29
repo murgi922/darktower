@@ -2810,7 +2810,7 @@ MonoBehaviour:
   initialJumpForce: 10
   contJumpForce: 50
   contJumpDuration: 0.3
-  jumpDelay: 0
+  jumpDelay: 0.1
   PhysicsMaterial2D: {fileID: 6200000, guid: 8205a98de1fb7784dafb03194a328c22, type: 2}
   tinyFriction: {fileID: 6200000, guid: b5bc6c1089be9a34e80b966f506e4463, type: 2}
   coyoteTime: 0.072
@@ -10060,6 +10060,7 @@ GameObject:
   - component: {fileID: 1670789330383193645}
   - component: {fileID: 1670789330383193646}
   - component: {fileID: 1670789330383193647}
+  - component: {fileID: 1670789330383193648}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -10177,9 +10178,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1076ca46a7083da49885f8d642e8b987, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  playerMovement: {fileID: 706035714}
   animator: {fileID: 1670789330383193646}
-  attackCooldown: 0.69
   attackClip: {fileID: 8300000, guid: 6c232d7c5cdc020448f1d4007f80e30b, type: 3}
+  attackCooldown: 0.4
+--- !u!114 &1670789330383193648
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 569652438337560143}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b941ad711cb0384bb3b7b2c6ebb3d28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::sound
+  swordSwingSound: {fileID: 8300000, guid: a0978066a85f00947afb3f05348aacff, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

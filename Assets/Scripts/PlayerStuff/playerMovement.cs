@@ -89,15 +89,8 @@ public class playerMovement : MonoBehaviour
             }
         }
     }
-
-    [Header("Animation")]
-    private Animator animator;
     #endregion
     #region Built In Functions
-    private void Start()
-    {
-        animator = GetComponent<Animator>();
-    }
     private void Awake()
     {
         moveAction = InputSystem.actions.FindAction("Move");
@@ -115,10 +108,6 @@ public class playerMovement : MonoBehaviour
         moveAction?.Disable();
         jumpAction?.Disable();
         JumpDelegate -= HandleJump; 
-    }
-    private void Update()
-    {
-        CheckAnimation();
     }
     private void FixedUpdate()
     {
@@ -240,16 +229,6 @@ public class playerMovement : MonoBehaviour
             airSpeedMultiplier = Mathf.Lerp(multiplier, 1f, elapsedTime / timeSpan);
             yield return new WaitForFixedUpdate();
         }
-        
-    }
-    #endregion
-    #region Animation
-    private void CheckAnimation()
-    {
-
-    }
-    private void ChangeAnimation(string animation, float crossFade = 0.2f)
-    {
         
     }
     #endregion
